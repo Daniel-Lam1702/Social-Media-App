@@ -4,4 +4,4 @@ Python version: 3.11.4 <br>
 # Packages installed  
 -Django  
 -DjangoRestFramework  
--Pyrebase: https://github.com/thisbejim/Pyrebase
+-Firebase-admin: https://firebase.google.com/docs/admin/setup?authuser=0#python  
