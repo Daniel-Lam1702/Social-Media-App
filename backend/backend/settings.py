@@ -11,6 +11,32 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import environ
+import firebase_admin
+from firebase_admin import credentials
+import os 
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
+
+# SETUP FIREBASE CREDENTIALS
+cred = credentials.Certificate({
+        "type" : os.environ.get('type'),
+        "project_id" : os.environ.get('project_id'),
+        "private_key_id" : os.environ.get('private_key_id'),
+        "private_key" : os.environ.get('private_key'),
+        "client_email" : os.environ.get('client_email'),
+        "client_id" : os.environ.get('client_id'),
+        "auth_uri" : os.environ.get('auth_uri'),
+        "token_uri" : os.environ.get('token_uri'),
+        "auth_provider_x509_cert_url" : os.environ.get('auth_provider_x509_cert_url'),
+        "client_x509_cert_url" : os.environ.get('client_x509_cert_url'),
+        "universe_domain": os.environ.get('universe_domain'),
+})
+default_app = firebase_admin.initialize_app(cred)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -121,3 +147,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
