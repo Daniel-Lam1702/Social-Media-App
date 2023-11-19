@@ -11,22 +11,21 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-import environ
 import firebase_admin
 from firebase_admin import credentials
 import os 
 from dotenv import load_dotenv
+from decouple import config
 
 # Load environment variables from .env
 load_dotenv()
 
-
-# SETUP FIREBASE CREDENTIALS
+# Setup firebase credentials
 cred = credentials.Certificate({
         "type" : os.environ.get('type'),
         "project_id" : os.environ.get('project_id'),
         "private_key_id" : os.environ.get('private_key_id'),
-        "private_key" : os.environ.get('private_key'),
+        "private_key" : os.environ.get('private_key').replace('\\n', '\n'),
         "client_email" : os.environ.get('client_email'),
         "client_id" : os.environ.get('client_id'),
         "auth_uri" : os.environ.get('auth_uri'),
@@ -35,8 +34,11 @@ cred = credentials.Certificate({
         "client_x509_cert_url" : os.environ.get('client_x509_cert_url'),
         "universe_domain": os.environ.get('universe_domain'),
 })
-default_app = firebase_admin.initialize_app(cred)
 
+# Initialize App
+firebase_admin.initialize_app(cred, options={
+    'databaseURL': 'https://your-firestore-database-url.firebaseio.com',
+})
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,7 +48,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j9vw=0lqmf6jbz%i&^x1a@$zxcjzql83c8hp(sy7!s_ig@gd+4'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -63,6 +65,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users',
+    'files',
+
 ]
 
 MIDDLEWARE = [
@@ -103,8 +108,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    },
+    'firebase': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'firebase_db.sqlite3',
+    },
 }
+
 
 
 # Password validation
