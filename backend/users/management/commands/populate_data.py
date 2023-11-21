@@ -24,6 +24,7 @@ class Command(BaseCommand):
            
 
         # Load JSON data from file
+        # TODO: change path accordingly
         with open('/Users/abrahamwestleyguan/Projects/Social-Media-App-Backend/backend/files/data.json') as json_file:
             data = json.load(json_file)
 
