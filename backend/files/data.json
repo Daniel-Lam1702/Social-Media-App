@@ -1,148 +1,140 @@
 {
-  "Users": {
-    "user_id_1": {
-      "email": "yunseo@example.com",
-      "password": "hashed_password_1",
-      "username": "username1",
-      "profile_picture": "profile_picture_url_1",
-      "description": "user_description_1",
-      "posts_created": {
-        "post_id_1": true,
-        "post_id_2": true
-      },
-      "forums_followed": {
-        "forum_id_1": true,
-        "forum_id_2": true
-      },
-      "schedule": {
-        "event_id_1": {
-          "start_time": "2023-01-01T09:00:00",
-          "end_time": "2023-01-01T11:00:00",
-          "class": "Class 101",
-          "description": "Meeting with client"
+    "Users": {
+        "user_id_1": {
+            "email": "yunseo@example.com",
+            "password": "hashed_password_1",
+            "username": "username1",
+            "profile_picture": "profile_picture_url_1",
+            "description": "user_description_1",
+            "posts_created": {
+                "post_id_1": true,
+                "post_id_2": true
+            },
+            "forums_followed": {
+                "forum_id_1": true,
+                "forum_id_2": true
+            },
+            "schedule": {
+                "event_id_1": {
+                    "start_time": "2023-01-01T09:00:00",
+                    "end_time": "2023-01-01T11:00:00",
+                    "class": "Class 101",
+                    "description": "Meeting with client"
+                },
+                "event_id_2": {
+                    "start_time": "2023-01-02T14:00:00",
+                    "end_time": "2023-01-02T16:00:00",
+                    "class": "Class 102",
+                    "description": "Conference call"
+                }
+            }
         },
-        "event_id_2": {
-          "start_time": "2023-01-02T14:00:00",
-          "end_time": "2023-01-02T16:00:00",
-          "class": "Class 102",
-          "description": "Conference call"
+
+        "user_id_2": {
+            "email": "joseph@example.com",
+            "password": "hashed_password_2",
+            "username": "username2",
+            "profile_picture": "profile_picture_url_2",
+            "description": "user_description_2",
+            "posts_created": {
+                "post_id_3": true
+            },
+            "forums_followed": {
+                "forum_id_1": true,
+                "forum_id_3": true
+            },
+            "schedule": {
+                "event_id_1": {
+                    "start_time": "2023-01-03T10:00:00",
+                    "end_time": "2023-01-03T12:00:00",
+                    "class": "Class 103",
+                    "description": "Team meeting"
+                }
+            }
         }
-      }
     },
 
-    "user_id_2": {
-      "email": "user2@example.com",
-      "password": "hashed_password_2",
-      "username": "username2",
-      "profile_picture": "profile_picture_url_2",
-      "description": "user_description_2",
-      "posts_created": {
-        "post_id_3": true
-      },
-      "forums_followed": {
-        "forum_id_1": true,
-        "forum_id_3": true
-      },
-      "schedule": {
-        "event_id_1": {
-          "start_time": "2023-01-03T10:00:00",
-          "end_time": "2023-01-03T12:00:00",
-          "class": "Class 103",
-          "description": "Team meeting"
+    "Forums": {
+        "forum_id_1": {
+            "name": "Forum 1",
+            "is_public": true,
+            "college": "Sample College"
+        },
+        "forum_id_2": {
+            "name": "Forum 2",
+            "is_public": false,
+            "college": "Another College"
         }
-      }
-    }
-  },
-
-
-  "Forums": {
-    "forum_id_1": {
-      "name": "Forum 1",
-      "is_public": true,
-      "college": "Sample College"
     },
-    "forum_id_2": {
-      "name": "Forum 2",
-      "is_public": false,
-      "college": "Another College"
+
+    "ForumPosts": {
+        "post_id_1": {
+            "author": "user_id_1",
+            "survey": false,
+            "forum": "forum_id_1",
+            "image/video": "post_media_url_1",
+            "title": "Post Title 1",
+            "description": "Post Content 1",
+            "location": "Location 1",
+            "is_posted": true,
+            "posted_date": "2023-01-01T15:30:00",
+            "no_comment": 0,
+            "allow_save": true,
+            "anonymous": false
+        }
+    },
+
+    "Comments": {
+        "comment_id_1": {
+            "image/video": "comment_media_url_1",
+            "title": "Comment Title 1",
+            "description": "Comment Content 1",
+            "posted_date": "2023-01-01T16:15:00",
+            "parent_post": "post_id_1",
+            "anonymous": true
+        }
+    },
+
+    "Chatrooms": {
+        "chatroom_id_1": {
+            "user1": "user_id_1",
+            "user2": "user_id_2"
+        }
+    },
+
+    "ChatMessages": {
+        "chatroom_id_1": {
+            "message_id_1": {
+                "writer": "user_id_1",
+                "date_time": "2023-01-01T19:30:00",
+                "content": "Hello, how are you?",
+                "video": "video_url_1",
+                "picture": "picture_url_1"
+            }
+        }
+    },
+
+    "Classes": {
+        "class_id_1": {
+            "course_name": "Class 222",
+            "section": "Section A",
+            "professor": "professor_id_1"
+        }
+    },
+
+    "Professors": {
+        "professor_id_1": {
+            "name": "Professor Smith",
+            "email": "professor@example.com",
+            "rating": 4.5
+        }
+    },
+
+    "Feedback": {
+        "feedback_id_1": {
+            "rating": 5.0,
+            "course": "Class 101",
+            "description": "Great class!"
+        }
     }
-  },
-
-
-  "ForumPosts": {
-    "post_id_1": {
-      "author": "user_id_1",
-      "survey": false,
-      "forum": "forum_id_1",
-      "image/video": "post_media_url_1",
-      "title": "Post Title 1",
-      "description": "Post Content 1",
-      "location": "Location 1",
-      "is_posted": true,
-      "posted_date": "2023-01-01T15:30:00",
-      "no_comment": 0,
-      "allow_save": true,
-      "anonymous": false
-    }
-  },
-
-
-  "Comments": {
-    "comment_id_1": {
-      "image/video": "comment_media_url_1",
-      "title": "Comment Title 1",
-      "description": "Comment Content 1",
-      "posted_date": "2023-01-01T16:15:00",
-      "parent_post": "post_id_1",
-      "anonymous": true
-    }
-  },
-
-
-  "Chatrooms": {
-    "chatroom_id_1": {
-      "user1": "user_id_1",
-      "user2": "user_id_2"
-    }
-  },
-
-
-  "ChatMessages": {
-    "chatroom_id_1": {
-      "message_id_1": {
-        "writer": "user_id_1",
-        "date_time": "2023-01-01T19:30:00",
-        "content": "Hello, how are you?",
-        "video": "video_url_1",
-        "picture": "picture_url_1"
-      }
-    }
-  },
-
-
-  "Classes": {
-    "class_id_1": {
-      "course_name": "Class 101",
-      "section": "Section A",
-      "professor": "professor_id_1"
-    }
-  },
-
-
-  "Professors": {
-    "professor_id_1": {
-      "name": "Professor Smith",
-      "email": "professor@example.com",
-      "rating": 4.5
-    }
-  },
-
-  
-  "Feedback": {
-    "feedback_id_1": {
-      "rating": 5.0,
-      "course": "Class 101",
-      "description": "Great class!"
-    }
-  }
 }
