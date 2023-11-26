@@ -37,7 +37,7 @@ class SignUp(APIView):
         except:
             return Response({'status': False, 'message': 'Provide an email'}, status = status.HTTP_400_BAD_REQUEST)
         #verify again that the username is unique
-        if not is_username_unique(username): #The username can be not unique if the username matches the email of the user in the database with the same email.
+        if not is_username_unique(username) and not username_match_email(username, email): #The username can be not unique if the username matches the email of the user in the database with the same email.
             return Response({'status': False, 'message': 'Provide a unique username'}, status = status.HTTP_409_CONFLICT)
         #Check if the password is strong
         is_password_strong, message = check_password_strength(password)
@@ -46,11 +46,29 @@ class SignUp(APIView):
         #Verify if the email is already verified, which means it is taken already.
         if check_email_verification_status(email):
             return Response({'status': False, 'message': 'The email provided is already verified'}, status = status.HTTP_409_CONFLICT)
+        elif check_email_verification_status(email) == False:
+            #Get the uid
+            result, uid = get_uid_from_email(email)
+            #Get the user with the uid from firebase authentication
+            user = auth.get_user(uid)
+            #Change the username in firestore
+            user_ref = settings.FIRESTORE_DB.collection('users').document(uid)
+            user_ref.update({'username': username})
+            #Change the password in firebase authentication
+            auth.update_user(
+                uid,
+                password = password,
+            )
+            #Send another verification email
+            link = auth.generate_email_verification_link(email)
+            send_email(link, email, username)
+            return Response({'success': True, 'message': 'User sign up information has been modified'}, status = status.HTTP_202_ACCEPTED)
         #verify the email is a college email, and not registered yet.
         if not is_college_email(email):
             return Response({'status': False, 'message': 'Provide a valid college email'}, status = status.HTTP_409_CONFLICT)
-        #Sign up the user on firebase authentication
+        #Sign up the user on firebase authentication when the user does not exist in the database
         try:
+
             #Does the firebase authentication sign up:
             user = auth.create_user(
                 email=email,
@@ -73,10 +91,7 @@ class SignUp(APIView):
             user_ref.set(user_data)
             return Response({"success": True, "message": "User signed up successfully"}, status=status.HTTP_201_CREATED)
         except auth.EmailAlreadyExistsError:
-            # Email is in the database, but it never got verified. Therefore,
-            # replace the username in the database and the password in firebase authentication
-            # resend an email verification link
-            return Response({'success': False, 'message': 'Email is already registered'}, status=status.HTTP_409_CONFLICT)
+            return Response({"success": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"success": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         #Add the username to firestore as a document

@@ -2,8 +2,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import firebase_admin
-from firebase_admin import credentials
-
+from firebase_admin import credentials, firestore
 # Load environment variables from .env
 load_dotenv()
 
@@ -142,3 +141,4 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_ADDRESS_SENDER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+FIRESTORE_DB = firestore.client()

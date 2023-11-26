@@ -1,4 +1,6 @@
-from firebase_admin import auth, firestore
+from firebase_admin import auth
+from google.cloud.firestore_v1.base_query import FieldFilter, BaseCompositeFilter
+from google.cloud.firestore_v1.types import StructuredQuery
 import os
 from django.core.mail import EmailMessage, get_connection
 from dotenv import load_dotenv
@@ -7,13 +9,47 @@ import http.client
 from django.conf import settings
 from password_strength import PasswordPolicy
 
-def is_username_unique(username):
-    #Checking if the username is unique
-    firestore_db = firestore.client()
+def get_uid_from_email(email):
+    try:
+        #Specifying the collection
+        collection_ref = settings.FIRESTORE_DB.collection('users')
+        query = collection_ref.where(filter = FieldFilter('email', '==', email)).limit(1)
+        docs = query.stream()
+        for doc in docs:
+            return True, doc.id
+        return False, None
+    except:
+        return False, None
+
+
+def username_match_email(username, email):
+    #Checking if the username has the same email
 
     try:
+        # Making a composite_filter that requires a user with the same email and username
+        composite_filter = BaseCompositeFilter(
+            # If you use StructuredQuery.CompositeFilter.Operator.AND here it gives the same effect as chaining "where" functions
+            operator=StructuredQuery.CompositeFilter.Operator.AND,
+            filters=[
+                FieldFilter("username", "==", username),
+                FieldFilter("email", "==", email)
+            ]
+        )
         # Query the Firestore collection to check if any user has the given username
-        user_query = firestore_db.collection("users").where("username", "==", username).limit(1)
+        user_query = settings.FIRESTORE_DB.collection("users").where(filter=composite_filter).limit(1)
+        existing_user = user_query.stream()
+        # If existing_user has 1 user, the username has the same email
+        return any(existing_user)
+    except Exception as e:
+        # Handle Firestore query errors
+        print(f"Error querying Firestore: {e}")
+        return None
+
+def is_username_unique(username):
+    #Checking if the username has the same email
+    try:
+        # Query the Firestore collection to check if any user has the given username
+        user_query = settings.FIRESTORE_DB.collection("users").where(filter = FieldFilter("username", "==", username)).limit(1)
         existing_user = user_query.stream()
 
         # If existing_user is empty, the username is unique
@@ -70,10 +106,9 @@ def check_email_verification_status(email):
     #Checks if the email is already verified
     try:
         user = auth.get_user_by_email(email)
-        print(user.email_verified)
         return user.email_verified
     except auth.UserNotFoundError:
-        return False  # Handle the case where the user does not exist
+        return None  # Handle the case where the user does not exist
 
 def check_password_strength(password):
     # Define a password policy
