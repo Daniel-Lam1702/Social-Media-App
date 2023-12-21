@@ -1,26 +1,11 @@
 from firebase_admin import auth
 from google.cloud.firestore_v1.base_query import FieldFilter, BaseCompositeFilter
 from google.cloud.firestore_v1.types import StructuredQuery
-import os
-from django.core.mail import EmailMessage, get_connection
-from dotenv import load_dotenv
+import resend
 import json
 import http.client
 from django.conf import settings
 from password_strength import PasswordPolicy
-
-def get_uid_from_email(email):
-    try:
-        #Specifying the collection
-        collection_ref = settings.FIRESTORE_DB.collection('users')
-        query = collection_ref.where(filter = FieldFilter('email', '==', email)).limit(1)
-        docs = query.stream()
-        for doc in docs:
-            return True, doc.id
-        return False, None
-    except:
-        return False, None
-
 
 def username_match_email(username, email):
     #Checking if the username has the same email
@@ -40,20 +25,6 @@ def username_match_email(username, email):
         existing_user = user_query.stream()
         # If existing_user has 1 user, the username has the same email
         return any(existing_user)
-    except Exception as e:
-        # Handle Firestore query errors
-        print(f"Error querying Firestore: {e}")
-        return None
-
-def is_username_unique(username):
-    #Checking if the username has the same email
-    try:
-        # Query the Firestore collection to check if any user has the given username
-        user_query = settings.FIRESTORE_DB.collection("users").where(filter = FieldFilter("username", "==", username)).limit(1)
-        existing_user = user_query.stream()
-
-        # If existing_user is empty, the username is unique
-        return not any(existing_user)
     except Exception as e:
         # Handle Firestore query errors
         print(f"Error querying Firestore: {e}")
@@ -79,33 +50,29 @@ def is_college_email(email):
     if 'error' in result_dict:
         return False
     return result_dict['data']
-
-def send_email(link, recipient, user): 
+def get_college_from_email(email):
+    try:
+        domain = email.split("@")[1]
+        return settings.UNIVERSITY_DATA[domain]
+    except KeyError as e:
+        return None
+def send_email(message, recipient, subject): 
     #Sends an email with the link to the user:
-    with get_connection(  
-        host=settings.EMAIL_HOST, 
-    port=settings.EMAIL_PORT,  
-    username=settings.EMAIL_HOST_USER, 
-    password=settings.EMAIL_HOST_PASSWORD, 
-    use_tls=settings.EMAIL_USE_TLS  
-    ) as connection:  
-        subject = 'Verify your email for DoorC App'
-        email_from = settings.EMAIL_HOST_USER  
-        recipient_list = [recipient]  
-        message = f'''<p>Hello {user},</p>
-        <p>Follow this link to verify your email address.</p>
-        <p><a href='{link}'>{link}</a></p>
-        <p>If you didn’t ask to verify this address, you can ignore this email.</p>
-        <p>Thanks,</p>
-        <p>Your DoorC team</p>''' 
-        msg = EmailMessage(subject, message, email_from, recipient_list, connection=connection)
-        msg.content_subtype = "html"
-        msg.send() 
+    params = {
+        "from": "noreply@doorsee.com",
+        "to" : recipient,
+        "subject": subject,
+        "html":message,
+    }
+    resend.api_key = settings.RESEND_KEY
+    email = resend.Emails.send(params)
+    return email
 
 def check_email_verification_status(email):
     #Checks if the email is already verified
     try:
         user = auth.get_user_by_email(email)
+        print(user.email_verified)
         return user.email_verified
     except auth.UserNotFoundError:
         return None  # Handle the case where the user does not exist
