@@ -111,7 +111,7 @@ def get_field_value(collection_name, document_id, field_name):
     # Get the document snapshot
     document_snapshot = document_ref.get()
     # Check if the document exists
-    if document_snapshot.exists() :
+    if document_snapshot.exists:
         # Get the field value
         field_value = document_snapshot.get(field_name)
         return field_value

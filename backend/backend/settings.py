@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials, firestore
+import json
 # Load environment variables from .env
 load_dotenv()
 
@@ -47,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
+    'posts',
+    'forums',
 ]
 
 MIDDLEWARE = [
@@ -134,11 +137,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #API KEY THAT VERIFIES ACADEMIC EMAIL
 APYHUB_KEY = os.environ.get('APYHUB_KEY')
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_USE_TLS = False
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_ADDRESS_SENDER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+RESEND_KEY = os.environ.get('RESEND_KEY')
+#Activate firestore
 FIRESTORE_DB = firestore.client()
+
+with open('backend\world_universities_and_domains_simplified.json', 'r', encoding='utf-8') as file:
+    UNIVERSITY_DATA = json.load(file)
