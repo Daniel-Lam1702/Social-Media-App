@@ -6,9 +6,14 @@ from firebase_admin import auth, firestore
 from .authentication import *
 import os
 os.chdir('../')
-from firebase_functions import get_field_value, is_value_unique, get_uid_from_field
+from firebase_functions import delete_document, get_field_value, is_value_unique, get_uid_from_field, verifyToken
 #Verify username exists
 class UsernameExists(APIView):
+    """
+    Checks if a username already exists in the app
+    Type of HTTP Request: GET
+    Parameters: 
+    """
     def get(self, request, *args, **kwargs):
         username = kwargs.get('username')
         if username == None: #No username was provided in the url
@@ -156,5 +161,23 @@ class SendEmailToResetPassword(APIView):
         except:
             return Response({"status": False, "message": "Unable to send an email"}, status=status.HTTP_400_BAD_REQUEST)
 
-            
-
+class DeleteUser(APIView):
+    def delete(self, request):
+        authorization_header = request.headers.get('Authorization', '')
+        token = authorization_header
+        if not token:
+            return Response({'status': False, 'message': 'Invalid Authorization header'}, status=status.HTTP_401_UNAUTHORIZED)
+        valid_uid, uid = verifyToken(token)
+        if not valid_uid:
+            return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+        #Delete from firestore
+        if not delete_document('users', uid):
+            return Response({'status': False, 'message': 'User could not be deleted in Firestore'}, status=status.HTTP_417_EXPECTATION_FAILED)
+        #Delete from Firebase Auth
+        try:
+            auth.delete_user(uid)
+        except:
+            return Response({'status': False, 'message': 'User could not be deleted from Firebase auth'}, status=status.HTTP_417_EXPECTATION_FAILED)
+        #Future: Send an email letting the user know that the account has been deleted
+        return Response({'status': True, 'message': 'User successfully deleted'}, status=status.HTTP_200_OK)
+        

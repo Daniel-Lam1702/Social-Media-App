@@ -32,11 +32,10 @@ class CreatePost(APIView):
                         - result: integer
                         - content: string
         """ 
-        #Placeholder for the function create_post
         """We verify that the token sent is valid"""
         # We obtain the token
         authorization_header = request.headers.get('Authorization', '')
-        token = get_token(authorization_header)
+        token = authorization_header
         if not token:
             return Response({'status': False, 'message': 'Invalid Authorization header'}, status=status.HTTP_401_UNAUTHORIZED)
         # We verify if the token is valid and get the user_id from the token
@@ -45,24 +44,27 @@ class CreatePost(APIView):
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
         data = request.data
         author = get_document_path_id(uid, 'users')
-        # Check if the required fields are included
+        # Getting the college of the user:
+        college = get_field_value("users", uid, "college")
+        # Getting the required fields to make a post
         try:
             forum = data['forum']
         except:
             return Response({'status': False, 'message': 'Provide a forum'}, status = status.HTTP_400_BAD_REQUEST)
-        forum = get_document_path('name', forum, 'forums')
+        # Getting the document path for the forum using a composite query (name_forum + name_college)
+        forum = query_composite_filter('name', forum, 'college', college, 'forums').reference.path
         if forum == None:
             return Response({'status': False, 'message': 'Could not find the forum'}, status = status.HTTP_400_BAD_REQUEST)
         try:
             title = data['title']
         except:
             return Response({'status': False, 'message': 'Provide a title'}, status = status.HTTP_400_BAD_REQUEST)
-        
         try:
             description = data['description']
         except:
             return Response({'status': False, 'message': 'Provide a description'}, status = status.HTTP_400_BAD_REQUEST)
         
+        #optional fields: allow_comment, anonymous_author, and is_posted
         try:
             allow_comment = data['allow_comment']
         except:
@@ -77,7 +79,6 @@ class CreatePost(APIView):
             is_posted = data['is_posted']
         except:
             is_posted = False
-
         document = {
             'title': title,
             'author': author,
@@ -88,12 +89,15 @@ class CreatePost(APIView):
             'is_posted': is_posted,
             'is_modified': False,
         }
-        if is_posted:
-            try:
-                posted_date = datetime.fromtimestamp(float(data['posted_date']))
-                document['posted_date'] = posted_date
-            except:
-                return Response({'status': False, 'message': 'provide a valid posted_date'}, status = status.HTTP_400_BAD_REQUEST)
+
+        try: 
+            date = datetime.fromtimestamp(float(data['date']))
+            if is_posted:
+                document['posted_date'] = date
+            else:
+                document['drafted date'] = date
+        except:
+            return Response({'status': False, 'message': 'provide a valid posted_date'}, status = status.HTTP_400_BAD_REQUEST)
         
         if 'location' in data:
             location = data['location']
@@ -130,6 +134,37 @@ class CreatePost(APIView):
             if subdocument_ref == None:
                 return Response({'status': False, 'message': 'survey could not be added to the post'}, status = status.HTTP_400_BAD_REQUEST)    
         return Response({'status': True, 'message': 'post created successfully'}, status = status.HTTP_201_CREATED)
+class GetDraftsFromUser(APIView):
+    def get(self, request):
+        #For every draft return the name of the post, name of the forum, date
+                # We obtain the token
+        authorization_header = request.headers.get('Authorization', '')
+        token = authorization_header
+        if not token:
+            return Response({'status': False, 'message': 'Invalid Authorization header'}, status=status.HTTP_401_UNAUTHORIZED)
+        # We verify if the token is valid and get the user_id from the token
+        valid_uid, uid = verifyToken(token)
+        if not valid_uid:
+            return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+        #With the user uid I can make a composite filter (user == uid + is_posted == False) that would get me a list with all the posts that are drafts
+        """Then, I can make a dictionary: 
+            {
+                id1: {
+                    title: title,
+                    forum: forum,
+                    date: date
+                },
+                id2: {
+                    title: title,
+                    forum: forum,
+                    date: date
+                },
+            }
+        """
+        author = get_document_path_id(uid, 'users')
+        list_drafts =  query_composite_filter_docs('author', author, 'is_posted', False, 'posts')
+        if list_drafts == None:
+            return Response({'status': False, 'message': 'No drafts associated with the user'}, status=status.HTTP_401_UNAUTHORIZED)
 class EditPost(APIView):
     def put(self, request):
         #Placeholder for the function edit_post
@@ -139,9 +174,6 @@ class GetPostsFromForum(APIView):
     def get(self, request):
         pass
 class GetPostsFromUser(APIView):
-    def get(self, request):
-        pass
-class GetDraftsFromUser(APIView):
     def get(self, request):
         pass
 class ClickOnOption(APIView):

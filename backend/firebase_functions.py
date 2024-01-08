@@ -21,9 +21,9 @@ def verifyToken(id_token):
             user_uid = decoded_token['uid']
 
             return (True, user_uid)
-        except auth.InvalidIdTokenError as e:
+        except:
             # Handle invalid token error
-            return (False, )
+            return (False, None)
 
 def get_document_path(field_name, value, collection_name):
     """
@@ -123,13 +123,19 @@ def update_field_in_document(collection_name, document_id, field_name, new_value
     try:
         # Reference to the document
         doc_ref = settings.FIRESTORE_DB.collection(collection_name).document(document_id)
-
         # Update the specific field in the document
         doc_ref.update({field_name: new_value})
         return True
     except:
         return False
     
+def delete_document(collection_name, document_id):
+    try:
+        doc_ref = settings.FIRESTORE_DB.collection(collection_name).document(document_id)
+        doc_ref.delete()
+        return True
+    except:
+        return False
 def query_composite_filter(name_field1, value1, name_field2, value2, collection_name):
     #Checking if the username has the same email
 
@@ -144,7 +150,29 @@ def query_composite_filter(name_field1, value1, name_field2, value2, collection_
             ]
         )
         # Query the Firestore collection to check if any user has the given username
-        user_query = settings.FIRESTORE_DB.collection(collection_name).where(filter=composite_filter).limit(1)
+        query = settings.FIRESTORE_DB.collection(collection_name).where(filter=composite_filter).limit(1)
+        existing_doc = query.stream()
+        for doc in existing_doc:
+            return doc
+        return None
+    except Exception as e:
+        # Handle Firestore query errors
+        print(f"Error querying Firestore: {e}")
+        return None
+def query_composite_filter_docs(name_field1, value1, name_field2, value2, collection_name):
+    #Todo: modify it to return a list with the references
+    try:
+        # Making a composite_filter that requires a user with the same email and username
+        composite_filter = BaseCompositeFilter(
+            # If you use StructuredQuery.CompositeFilter.Operator.AND here it gives the same effect as chaining "where" functions
+            operator=StructuredQuery.CompositeFilter.Operator.AND,
+            filters=[
+                FieldFilter(name_field1, "==", value1),
+                FieldFilter(name_field2, "==", value2)
+            ]
+        )
+        # Query the Firestore collection to check if any user has the given username
+        user_query = settings.FIRESTORE_DB.collection(collection_name).where(filter=composite_filter)
         existing_user = user_query.stream()
         # If existing_user has 1 user, the username has the same email
         return existing_user
