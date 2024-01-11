@@ -15,7 +15,7 @@ Database: Firebase Cloud Firestore <br>
     </ul>
   </li>
   <li>
-    forums
+    Forums
     <ul>
       <li>CreateForum</li>
       <li>ToggleForumPrivacy</li>
@@ -24,6 +24,7 @@ Database: Firebase Cloud Firestore <br>
     </ul>
   </li>
   <li>
+    Posts
     <ul>
       <li>CreatePost (Creating the subcollection Survey is not working yet</li>
       <li>GetDraftsFromUser</li>
