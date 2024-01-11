@@ -3,6 +3,9 @@ This is the backend for the social media web application for college students ca
 Python version: 3.11.4 <br>
 Framework: Django <br>
 Database: Firebase Cloud Firestore <br>
+Testing: Postman
+## API Documentation:
+https://docs.google.com/document/d/13NXs6NUCFribgJqT2ICyjAQVXwi-IqH_NfCbnopWPKo/edit?usp=sharing
 ## Setting up the project locally
 1. Go to the command prompt and cd to the directory where you want the project to be stored. Run this command line: <br>
 ```
@@ -51,5 +54,3 @@ pip freeze > requirements.txt
 - Posts
   - CreatePost (Creating the subcollection Survey is not working yet)
   - GetDraftsFromUser
-## API Documentation:
-https://docs.google.com/document/d/13NXs6NUCFribgJqT2ICyjAQVXwi-IqH_NfCbnopWPKo/edit?usp=sharing
