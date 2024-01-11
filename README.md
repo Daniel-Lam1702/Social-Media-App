@@ -8,7 +8,7 @@ Database: Firebase Cloud Firestore <br>
 ```
 git clone https://github.com/Daniel-Lam1702/Social-Media-App-Backend.git
 ```
-2. ```cd Social-Media-App-Backend```
+2.<br> ```cd Social-Media-App-Backend```
 3. Open it on an IDE.
 4. Run ```.\myvenv\Scripts\Activate.ps1``` in the command line to run the venv.
 5. Run ```pip install -r requirements.txt```to download the libraries used for this project.
