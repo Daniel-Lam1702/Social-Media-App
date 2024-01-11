@@ -1,12 +1,32 @@
-# Social-Media-App
-This is the backend for the social media web application for college students <br>
+# DoorC Backend
+This is the backend for the social media web application for college students called DoorC <br>
 Python version: 3.11.4 <br>
 Framework: Django <br>
 Database: Firebase Cloud Firestore <br>
-# Packages installed  
-- Django  
-- DjangoRestFramework  
-- Firebase-admin: https://firebase.google.com/docs/admin/setup?authuser=0#python  
-# In progress
-- Creating the sign up function
-- Designing the functions for the backend
+# Functions Completed, but further testing required
+<ul>
+  <li>
+    Users
+    <ul>
+      <li>UsernameExists</li>
+      <li>SignUp</li>
+      <li>SendEmailToResetPassword</li>
+      <li>DeleteUser</li>      
+    </ul>
+  </li>
+  <li>
+    forums
+    <ul>
+      <li>CreateForum</li>
+      <li>ToggleForumPrivacy</li>
+      <li>ChangeForumName</li>
+      <li>DeleteForum</li>      
+    </ul>
+  </li>
+  <li>
+    <ul>
+      <li>CreatePost (Creating the subcollection Survey is not working yet</li>
+      <li>GetDraftsFromUser</li>
+    </ul>
+  </li>
+</ul>
