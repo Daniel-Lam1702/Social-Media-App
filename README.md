@@ -4,9 +4,7 @@ Python version: 3.11.4 <br>
 Framework: Django <br>
 Database: Firebase Cloud Firestore <br>
 # Setting up the project locally
-<p>
-  More content will be provided...
-</p>
+More content will be provided...
 # Functions Completed, but further testing required
 <ul>
   <li>
