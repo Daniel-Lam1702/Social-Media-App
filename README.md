@@ -8,11 +8,10 @@ Database: Firebase Cloud Firestore <br>
 ```
 git clone https://github.com/Daniel-Lam1702/Social-Media-App-Backend.git
 ```
-2. Run: <br>
+2. Open the project on an IDE or run if you want to keep working on the command line: <br>
 ```
 cd Social-Media-App-Backend
 ```
-Or open the project on an IDE. <br>
 3. Run in the command line to run the venv: <br>
 ```
 .\myvenv\Scripts\Activate.ps1
