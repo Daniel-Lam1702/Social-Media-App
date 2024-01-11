@@ -12,7 +12,7 @@ git clone https://github.com/Daniel-Lam1702/Social-Media-App-Backend.git
 ```
 cd Social-Media-App-Backend
 ```
-Or open the project on an IDE.
+Or open the project on an IDE. <br>
 3. Run in the command line to run the venv: <br>
 ```
 .\myvenv\Scripts\Activate.ps1
