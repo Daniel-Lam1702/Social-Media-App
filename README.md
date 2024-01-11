@@ -3,6 +3,10 @@ This is the backend for the social media web application for college students ca
 Python version: 3.11.4 <br>
 Framework: Django <br>
 Database: Firebase Cloud Firestore <br>
+# Setting up the project locally
+<p>
+  More content will be provided...
+</p>
 # Functions Completed, but further testing required
 <ul>
   <li>
@@ -26,7 +30,7 @@ Database: Firebase Cloud Firestore <br>
   <li>
     Posts
     <ul>
-      <li>CreatePost (Creating the subcollection Survey is not working yet</li>
+      <li>CreatePost (Creating the subcollection Survey is not working yet)</li>
       <li>GetDraftsFromUser</li>
     </ul>
   </li>
