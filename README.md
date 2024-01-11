@@ -12,27 +12,31 @@ git clone https://github.com/Daniel-Lam1702/Social-Media-App-Backend.git
 ```
 cd Social-Media-App-Backend
 ```
-4. Open it on an IDE.
-5. Run in the command line to run the venv: <br>
+Or open the project on an IDE.
+3. Run in the command line to run the venv: <br>
 ```
 .\myvenv\Scripts\Activate.ps1
 ```
-7. Run to download the libraries used for this project: <br>
+4. Run to download the libraries used for this project: <br>
 ```
 pip install -r requirements.txt
 ```
-9. Create a **.env** file in the **backend** folder. Ask me for the keys privately.
-7. To change to the **backend** folder run: <br>
+5. Create a **.env** file in the **backend** folder. Ask me for the keys privately.
+6. To change to the **backend** folder run: <br>
 ```
 cd backend
 ``` 
-10. Run to start running the project: <br>
+7. To start running the project: <br>
 ```
 python manage.py runserver
 ```
-12. To add a new django app run: <br>
+8. To add a new django app run: <br>
 ```
 python manage.py startapp "name_of_app"
+```
+9. If you installed a new library run: <br>
+```
+pip freeze > requirements.txt
 ```
 ## Functions Completed, but further testing required
 - Users
@@ -48,3 +52,5 @@ python manage.py startapp "name_of_app"
 - Posts
   - CreatePost (Creating the subcollection Survey is not working yet)
   - GetDraftsFromUser
+## API Documentation:
+https://docs.google.com/document/d/13NXs6NUCFribgJqT2ICyjAQVXwi-IqH_NfCbnopWPKo/edit?usp=sharing
