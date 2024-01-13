@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from datetime import datetime
+import pytz
 from rest_framework.views import APIView 
 from rest_framework.response import Response
 from rest_framework import status
@@ -43,7 +44,7 @@ class CreatePost(APIView):
         if not valid_uid:
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
         data = request.data
-        author = get_document_path_id(uid, 'users')
+        author = get_document_reference_id(uid, 'users')
         # Getting the college of the user:
         college = get_field_value("users", uid, "college")
         # Getting the required fields to make a post
@@ -52,7 +53,7 @@ class CreatePost(APIView):
         except:
             return Response({'status': False, 'message': 'Provide a forum'}, status = status.HTTP_400_BAD_REQUEST)
         # Getting the document path for the forum using a composite query (name_forum + name_college)
-        forum = query_composite_filter('name', forum, 'college', college, 'forums').reference.path
+        forum = query_composite_filter('name', forum, 'college', college, 'forums').id
         if forum == None:
             return Response({'status': False, 'message': 'Could not find the forum'}, status = status.HTTP_400_BAD_REQUEST)
         try:
@@ -91,13 +92,14 @@ class CreatePost(APIView):
         }
 
         try: 
-            date = datetime.fromtimestamp(float(data['date']))
+            # Get the current date and time
+            current_time = datetime.utcnow().astimezone(pytz.utc)
             if is_posted:
-                document['posted_date'] = date
+                document['posted_date'] = current_time
             else:
-                document['drafted date'] = date
+                document['drafted_date'] = current_time
         except:
-            return Response({'status': False, 'message': 'provide a valid posted_date'}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({'status': False, 'message': 'provide a valid date'}, status = status.HTTP_400_BAD_REQUEST)
         
         if 'location' in data:
             location = data['location']
@@ -128,7 +130,7 @@ class CreatePost(APIView):
             }
             """
             for option in data['survey']['options']:
-                option['result'] = 0
+                data['survey']['options'][option]['result'] = 0
             data['survey']['num_responses'] = 0
             subdocument_ref = add_subdocument_to_document(data['survey'],'Survey', document_ref)
             if subdocument_ref == None:
@@ -161,10 +163,13 @@ class GetDraftsFromUser(APIView):
                 },
             }
         """
-        author = get_document_path_id(uid, 'users')
-        list_drafts =  query_composite_filter_docs('author', author, 'is_posted', False, 'posts')
+        list_drafts =  query_composite_filter_list('author', uid, 'is_posted', False, 'posts')
         if list_drafts == None:
             return Response({'status': False, 'message': 'No drafts associated with the user'}, status=status.HTTP_401_UNAUTHORIZED)
+        drafts = {}
+        for draft in list_drafts:
+            drafts[draft.id] = {'title': draft.get('title'), 'forum': draft.get('forum'), 'date': draft.get('drafted_date')}
+        return Response({'status': True, 'drafts': drafts}, status=status.HTTP_302_FOUND)
 class EditPost(APIView):
     def put(self, request):
         #Placeholder for the function edit_post

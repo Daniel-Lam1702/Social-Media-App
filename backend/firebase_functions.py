@@ -63,6 +63,20 @@ def get_document_path_id(value, collection_name):
     else:
         return None
 
+def get_document_reference_id(value, collection_name):
+    """
+    Parameters: field_name (The name of the field), value (The value of the field), collection_name (The name of the collection)
+    This function returns the document path when it receives a field name, its value, and collection name by making a query to the database
+    returns: None (no document found) or a reference.path (One document found)
+    """
+    # Reference to the collection
+    document_ref = settings.FIRESTORE_DB.collection(collection_name).document(value)
+    doc = document_ref.get()
+    if doc.exists:
+        return doc.id
+    else:
+        return None
+
 def add_document_to_collection(document, collection):
     try:
         main_collection_ref = settings.FIRESTORE_DB.collection(collection)
@@ -73,6 +87,9 @@ def add_document_to_collection(document, collection):
 
 def add_subdocument_to_document(subdocument, name_subcollection, document):
     try:
+        print(subdocument)
+        print(document)
+        print(name_subcollection)
         subcollection_ref = document.collection(name_subcollection)
         subdocument_ref = subcollection_ref.add(subdocument)
         return subdocument_ref
@@ -137,10 +154,11 @@ def delete_document(collection_name, document_id):
     except:
         return False
 def query_composite_filter(name_field1, value1, name_field2, value2, collection_name):
-    #Checking if the username has the same email
-
+    """
+    This function will return a doc reference if there is a value1 and value2 matching with one document.
+    """
     try:
-        # Making a composite_filter that requires a user with the same email and username
+        # Making a composite_filter that requires a user with the same value1 and value2
         composite_filter = BaseCompositeFilter(
             # If you use StructuredQuery.CompositeFilter.Operator.AND here it gives the same effect as chaining "where" functions
             operator=StructuredQuery.CompositeFilter.Operator.AND,
@@ -149,7 +167,7 @@ def query_composite_filter(name_field1, value1, name_field2, value2, collection_
                 FieldFilter(name_field2, "==", value2)
             ]
         )
-        # Query the Firestore collection to check if any user has the given username
+        # Query the Firestore collection to check if any collection_name has the composite filter
         query = settings.FIRESTORE_DB.collection(collection_name).where(filter=composite_filter).limit(1)
         existing_doc = query.stream()
         for doc in existing_doc:
@@ -159,10 +177,10 @@ def query_composite_filter(name_field1, value1, name_field2, value2, collection_
         # Handle Firestore query errors
         print(f"Error querying Firestore: {e}")
         return None
-def query_composite_filter_docs(name_field1, value1, name_field2, value2, collection_name):
-    #Todo: modify it to return a list with the references
+def query_composite_filter_list(name_field1, value1, name_field2, value2, collection_name):
+    #Returns a QuerySnapshot that should be iterated in order to be accessed
     try:
-        # Making a composite_filter that requires a user with the same email and username
+        #  Making a composite_filter that requires a user with the same value1 and value2
         composite_filter = BaseCompositeFilter(
             # If you use StructuredQuery.CompositeFilter.Operator.AND here it gives the same effect as chaining "where" functions
             operator=StructuredQuery.CompositeFilter.Operator.AND,
@@ -171,10 +189,9 @@ def query_composite_filter_docs(name_field1, value1, name_field2, value2, collec
                 FieldFilter(name_field2, "==", value2)
             ]
         )
-        # Query the Firestore collection to check if any user has the given username
+        # Query the Firestore collection to check if any collection_name has the composite filter
         user_query = settings.FIRESTORE_DB.collection(collection_name).where(filter=composite_filter)
         existing_user = user_query.stream()
-        # If existing_user has 1 user, the username has the same email
         return existing_user
     except Exception as e:
         # Handle Firestore query errors

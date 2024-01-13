@@ -62,7 +62,7 @@ def send_email(message, recipient, subject):
         "from": "noreply@doorsee.com",
         "to" : recipient,
         "subject": subject,
-        "html":message,
+        "html": message,
     }
     resend.api_key = settings.RESEND_KEY
     email = resend.Emails.send(params)
@@ -72,7 +72,6 @@ def check_email_verification_status(email):
     #Checks if the email is already verified
     try:
         user = auth.get_user_by_email(email)
-        print(user.email_verified)
         return user.email_verified
     except auth.UserNotFoundError:
         return None  # Handle the case where the user does not exist

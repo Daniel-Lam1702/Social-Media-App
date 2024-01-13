@@ -6,7 +6,7 @@ from firebase_admin import auth, firestore
 from .authentication import *
 import os
 os.chdir('../')
-from firebase_functions import delete_document, get_field_value, is_value_unique, get_uid_from_field, verifyToken
+from firebase_functions import delete_document, get_field_value, is_value_unique, get_uid_from_field, query_composite_filter, verifyToken
 #Verify username exists
 class UsernameExists(APIView):
     """
@@ -27,6 +27,10 @@ class UsernameExists(APIView):
             return Response({'status': False, 'message': 'Database error'}, status = status.HTTP_404_NOT_FOUND)
 #User sign up
 class SignUp(APIView):
+    """
+    What's about:
+    Parameters:
+    """
     def post(self, request):
         #Verify that the data provided has username, password, and email
         data = request.data
@@ -47,17 +51,18 @@ class SignUp(APIView):
                 return Response({'status': False, 'message': 'Could not find a college associated to the email provided'}, status = status.HTTP_400_BAD_REQUEST)
         except:
             return Response({'status': False, 'message': 'Provide an email'}, status = status.HTTP_400_BAD_REQUEST)
-        #verify again that the username is unique
-        if not is_value_unique('username', username, 'users') and not username_match_email(username, email): #The username can be not unique if the username matches the email of the user in the database with the same email.
+        if query_composite_filter('username', username, 'college', college, 'users') != None and not username_match_email(username, email): 
+        #verify again that the username is unique#The username can be not unique if the username matches the email of the user in the database with the same email.
             return Response({'status': False, 'message': 'Provide a unique username'}, status = status.HTTP_409_CONFLICT)
         #Check if the password is strong
         is_password_strong, message = check_password_strength(password)
         if not is_password_strong:
             return Response({'status': False, 'message': 'Provide a stronger password', 'feedback': message}, status = status.HTTP_409_CONFLICT)
         #Verify if the email is already verified, which means it is taken already.
-        if check_email_verification_status(email):
+        if check_email_verification_status(email): 
             return Response({'status': False, 'message': 'The email provided is already verified'}, status = status.HTTP_409_CONFLICT)
-        elif check_email_verification_status(email) == False:
+        #Email is not verified but is stored in the database
+        elif check_email_verification_status(email) == False: 
             #Get the uid
             result, uid = get_uid_from_field('email', email, 'users')
             #Get the user with the uid from firebase authentication
@@ -97,20 +102,29 @@ class SignUp(APIView):
                 password=password,
                 email_verified=False,
             )
-            #generating email verification link
+            #generating email verification link and sending the email
             link = auth.generate_email_verification_link(email)
-            send_email(link, email, username)
-
-            #Stores the user in firestore
-            firestore_db = firestore.client()
-            
+            subject = 'Verify your email for DoorC App'
+            message = f'''<p>Hello {user},</p>
+                <p>Follow this link to verify your email address.</p>
+                <a href="{link}" style="text-decoration: none; cursor: pointer !important;">
+                    <button style="padding: 10px 20px; font-size: 16px; color:white; background-color:#66399D; border: none; border-radius: 5px; cursor: pointer !important;">
+                        Verify Account
+                    </button>
+                </a>
+                <p>If you didn’t ask to verify this address, you can ignore this email.</p>
+                <p>Thanks,</p>
+                <p>Your DoorC team</p>'''
+            send_email(message, email, subject)
+            #User data updloaded on firestore
             user_data = {
                 "username": username,
                 "email": email,
                 "college": college,
+                "forums": []
             }
             # Add user data to Firestore with UID as the document ID
-            user_ref = firestore_db.collection("users").document(user.uid)
+            user_ref = settings.FIRESTORE_DB.collection("users").document(user.uid)
             user_ref.set(user_data)
             return Response({"status": True, "message": "User signed up successfully"}, status=status.HTTP_201_CREATED)
         except auth.EmailAlreadyExistsError:
@@ -155,7 +169,6 @@ class SendEmailToResetPassword(APIView):
                 <p>If you didn’t ask to reset the password for your account, you can ignore this email.</p>
                 <p>Thanks,</p>
                 <p>Your DoorC team</p>'''
-            print('hi')
             send_email(message, email, subject)
             return Response({"status": True, "message": "Password reset link sent to your email."}, status=status.HTTP_200_OK)
         except:
@@ -180,4 +193,44 @@ class DeleteUser(APIView):
             return Response({'status': False, 'message': 'User could not be deleted from Firebase auth'}, status=status.HTTP_417_EXPECTATION_FAILED)
         #Future: Send an email letting the user know that the account has been deleted
         return Response({'status': True, 'message': 'User successfully deleted'}, status=status.HTTP_200_OK)
-        
+
+class AddForum(APIView):
+    """
+        Adds a forum reference to the user's forums list
+    """
+    def patch(self, request):
+        """
+            1. Token
+            2. user id
+            3. college
+            4. get the forum id followed by the user
+            5. Add it to the 'forums':[]
+        """
+        pass       
+
+class GetForums(APIView):
+    """
+        Get forums followed by the user
+    """
+    def get(self, request):
+        """
+            1. Token
+            2. user id
+            3. College
+            4. Get the [] from 'forums'
+        """
+        pass
+
+class UnfollowForum(APIView):
+    """
+        Unfollow a forum
+    """
+    def patch(self, request):
+        """
+            1. Token
+            2. user id
+            3. college
+            4. get the forum id followed by the user
+            5. delete that forum from the [] in 'forums'
+        """
+        pass

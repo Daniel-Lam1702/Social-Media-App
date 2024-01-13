@@ -15,8 +15,6 @@ class CreateForum(APIView):
         valid_uid, uid = verifyToken(token)
         if not valid_uid:
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
-        # Assigning the author
-        creator = get_document_path_id(uid, 'users')
         data = request.data
         #Obtaining the college from the user
         college = get_field_value("users", uid, "college")
@@ -24,7 +22,7 @@ class CreateForum(APIView):
         try:
             name = data['name']
             if query_composite_filter('college', college, 'name', name, 'forums') != None:
-                return Response({'status': False, 'message': f'The forum {name} already exists in the {college} community' }, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'status': False, 'message': f'The forum \'{name}\' already exists in the {college} community' }, status=status.HTTP_401_UNAUTHORIZED)
         except:
             return Response({'status': False, 'message': 'Provide a name for the forum'}, status=status.HTTP_401_UNAUTHORIZED)
         # Verifying is_public field
@@ -36,13 +34,13 @@ class CreateForum(APIView):
             'name': name,
             'is_public': is_public,
             'college': college,
-            'creator': creator
+            'creator': uid
         }
 
         document_ref = add_document_to_collection(document, 'forums')
         if document_ref == None:
-            return Response({'status': False, 'message': 'post could not be added to the database'}, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'status': True, 'message': 'post created successfully'}, status = status.HTTP_201_CREATED)
+            return Response({'status': False, 'message': 'Forum could not be added to the database'}, status = status.HTTP_400_BAD_REQUEST)
+        return Response({'status': True, 'message': 'Forum created successfully'}, status = status.HTTP_201_CREATED)
 class ToggleForumPrivacy(APIView):
     def patch(self, request):
         """
@@ -54,21 +52,23 @@ class ToggleForumPrivacy(APIView):
         if not token:
             return Response({'status': False, 'message': 'Invalid Authorization header'}, status=status.HTTP_401_UNAUTHORIZED)
         valid_uid, uid = verifyToken(token)
-        college = get_field_value("users", uid, "college")
         if not valid_uid:
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            forum_id = request.data['forum_id']
+        except:
+            return Response({'status': False, 'message': 'Provide a valid forum id'}, status=status.HTTP_404_NOT_FOUND)
+        #Verify if the user is the creator...so that user has access to delete the forum
+        creator = get_field_value("forums", forum_id, "creator")
+        if creator == None:
+            return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
+        if creator != uid:
+            return Response({'status': False, 'message': 'User is not allowed to delete the forum'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             is_public = request.data['is_public']
         except:
             return Response({'status': False, 'message': 'Provide is_public value'}, status=status.HTTP_412_PRECONDITION_FAILED)
-        try:
-            forum_name = request.data['forum_name']
-        except:
-            return Response({'status': False, 'message': 'Provide a forum name'}, status=status.HTTP_412_PRECONDITION_FAILED)
-        forum_doc = query_composite_filter('name', forum_name, 'college', college, 'forums')
-        if forum_doc == None:
-            return Response({'status': False, 'message': 'Could not find a forum'}, status=status.HTTP_400_BAD_REQUEST)
-        updated_privacy = update_field_in_document('forums', forum_doc.id, 'is_public', (not is_public))
+        updated_privacy = update_field_in_document('forums', forum_id, 'is_public', (not is_public))
         if not updated_privacy:
             return Response({'status': False, 'message': 'Privacy not updated'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': True, 'message': 'Privacy updated'}, status=status.HTTP_200_OK)
@@ -90,22 +90,24 @@ class ChangeForumName(APIView):
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
         #Retrieving the current forum name
         try:
-            current_forum_name = request.data['current_forum_name']
+            forum_id = request.data['forum_id']
         except:
-            return Response({'status': False, 'message': 'Provide the current forum name'}, status=status.HTTP_412_PRECONDITION_FAILED)
+            return Response({'status': False, 'message': 'Provide a valid forum id'}, status=status.HTTP_404_NOT_FOUND)
+        #Verify if the user is the creator...so that user has access to delete the forum
+        creator = get_field_value("forums", forum_id, "creator")
+        if creator == None:
+            return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
+        if creator != uid:
+            return Response({'status': False, 'message': 'User is not allowed to delete the forum'}, status=status.HTTP_401_UNAUTHORIZED)
         #Retrieving the new forum name
         try:
             new_forum_name = request.data['new_forum_name']
         except:
             return Response({'status': False, 'message': 'Provide the new forum name'}, status=status.HTTP_409_CONFLICT)
-        #Getting the document with the current_forum_name
-        forum_doc = query_composite_filter('name', current_forum_name, 'college', college, 'forums')
-        if forum_doc == None:
-            return Response({'status': False, 'message': f'Could not find the forum \'{current_forum_name}\''}, status=status.HTTP_400_BAD_REQUEST)
         #verifying if the new forum name is available
         if query_composite_filter('name', new_forum_name, 'college', college, 'forums') != None:
             return Response({'status': False, 'message': f'The forum \'{new_forum_name}\' already exists in the college {college} community'}, status=status.HTTP_409_CONFLICT)
-        updated_name = update_field_in_document('forums', forum_doc.id, 'name', new_forum_name)
+        updated_name = update_field_in_document('forums', forum_id, 'name', new_forum_name)
         if not updated_name:
             return Response({'status': False, 'message': 'Forum name not modified'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({'status': True, 'message': 'Forum name modifed'}, status=status.HTTP_200_OK)
@@ -121,22 +123,19 @@ class DeleteForum(APIView):
         valid_uid, uid = verifyToken(token)
         if not valid_uid:
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
-        college = get_field_value("users", uid, "college")        
         try:
-            forum_name = request.data['forum_name']
+            forum_id = request.data['forum_id']
         except:
-            return Response({'status': False, 'message': 'Provide the current forum name'}, status=status.HTTP_404_NOT_FOUND)
-        forum_doc = query_composite_filter('name', forum_name, 'college', college, 'forums')
-        if forum_doc == None:
-            return Response({'status': False, 'message': f'Could not find the forum \'{forum_name}\''}, status=status.HTTP_400_BAD_REQUEST)
-        if delete_document('forums', forum_doc.id):
+            return Response({'status': False, 'message': 'Provide a valid forum id'}, status=status.HTTP_404_NOT_FOUND)
+        #Verify if the user is the creator...so that user has access to delete the forum
+        creator = get_field_value("forums", forum_id, "creator")
+        if creator == None:
+            return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
+        print(creator)
+        print(uid)
+        if creator != uid:
+            return Response({'status': False, 'message': 'User is not allowed to delete the forum'}, status=status.HTTP_401_UNAUTHORIZED)
+        if delete_document('forums', forum_id):
             return Response({'status': True, 'message': 'Forum deleted'}, status=status.HTTP_200_OK)
         else:
             return Response({'status': False, 'message': 'Could not delete forum'}, status=status.HTTP_304_NOT_MODIFIED)
-#GetForumsFollowedByUser
-class GetForumsFollowedByUser(APIView):
-    def get(self, request):
-        """
-        Gets the forums followed by a user.
-        """
-        pass
