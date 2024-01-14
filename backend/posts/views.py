@@ -49,13 +49,11 @@ class CreatePost(APIView):
         college = get_field_value("users", uid, "college")
         # Getting the required fields to make a post
         try:
-            forum = data['forum']
+            forum_id = data['forum_id']
         except:
-            return Response({'status': False, 'message': 'Provide a forum'}, status = status.HTTP_400_BAD_REQUEST)
-        # Getting the document path for the forum using a composite query (name_forum + name_college)
-        forum = query_composite_filter('name', forum, 'college', college, 'forums').id
-        if forum == None:
-            return Response({'status': False, 'message': 'Could not find the forum'}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({'status': False, 'message': 'Provide a forum_id'}, status = status.HTTP_400_BAD_REQUEST)
+        if get_document_path_id( forum_id, "forums") == None:
+            return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
         try:
             title = data['title']
         except:
@@ -83,7 +81,7 @@ class CreatePost(APIView):
         document = {
             'title': title,
             'author': author,
-            'forum': forum,
+            'forum_id': forum_id,
             'description': description,
             'allow_comment': allow_comment,
             'anonymous_author': anonymous_author,
@@ -110,7 +108,7 @@ class CreatePost(APIView):
         document_ref = add_document_to_collection(document, 'posts')
         if document_ref == None:
             return Response({'status': False, 'message': 'post could not be added to the database'}, status = status.HTTP_400_BAD_REQUEST)
-        
+        document_ref = document_ref[1]
         #Make a survey subcollection
         if 'survey' in data:
             """Structure
@@ -129,16 +127,24 @@ class CreatePost(APIView):
                 }
             }
             """
-            for option in data['survey']['options']:
-                data['survey']['options'][option]['result'] = 0
-            data['survey']['num_responses'] = 0
-            subdocument_ref = add_subdocument_to_document(data['survey'],'Survey', document_ref)
-            if subdocument_ref == None:
+            survey = {'num_responses': 0, 'survey_title': data['survey']['survey_title']}
+            survey_ref = add_subdocument_to_document(survey, 'survey', document_ref)
+            if survey_ref == None:
                 return Response({'status': False, 'message': 'survey could not be added to the post'}, status = status.HTTP_400_BAD_REQUEST)    
+            survey_ref = survey_ref[1]
+            options = dict()
+            for option in data['survey']['options']:
+                options[option] = {}
+                if "image_url" in data['survey']['options'][option]:
+                    options[option]['image_url'] = data['survey']['options'][option]['image_url']
+                options[option]['times_selected'] = 0
+            options_ref = add_subdocument_to_document(options, 'options', survey_ref)
+            if options_ref == None:
+                return Response({'status': False, 'message': 'options could not be added to the survey'}, status = status.HTTP_400_BAD_REQUEST)    
         return Response({'status': True, 'message': 'post created successfully'}, status = status.HTTP_201_CREATED)
 class GetDraftsFromUser(APIView):
     def get(self, request):
-        #For every draft return the name of the post, name of the forum, date
+        #For every draft return all the details
                 # We obtain the token
         authorization_header = request.headers.get('Authorization', '')
         token = authorization_header

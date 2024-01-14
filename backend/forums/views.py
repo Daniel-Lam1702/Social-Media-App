@@ -40,7 +40,7 @@ class CreateForum(APIView):
         document_ref = add_document_to_collection(document, 'forums')
         if document_ref == None:
             return Response({'status': False, 'message': 'Forum could not be added to the database'}, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'status': True, 'message': 'Forum created successfully'}, status = status.HTTP_201_CREATED)
+        return Response({'status': True, 'message': 'Forum created successfully', 'forum_id': document_ref[1].id}, status = status.HTTP_201_CREATED)
 class ToggleForumPrivacy(APIView):
     def patch(self, request):
         """
