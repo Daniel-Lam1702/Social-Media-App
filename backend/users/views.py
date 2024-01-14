@@ -51,8 +51,8 @@ class SignUp(APIView):
                 return Response({'status': False, 'message': 'Could not find a college associated to the email provided'}, status = status.HTTP_400_BAD_REQUEST)
         except:
             return Response({'status': False, 'message': 'Provide an email'}, status = status.HTTP_400_BAD_REQUEST)
-        if query_composite_filter('username', username, 'college', college, 'users') != None and not username_match_email(username, email): 
-        #verify again that the username is unique#The username can be not unique if the username matches the email of the user in the database with the same email.
+        if not is_value_unique('username', username, 'users') and not username_match_email(username, email):
+        #The username can be not unique if the username matches the email of the user in the database with the same email.
             return Response({'status': False, 'message': 'Provide a unique username'}, status = status.HTTP_409_CONFLICT)
         #Check if the password is strong
         is_password_strong, message = check_password_strength(password)
@@ -61,7 +61,7 @@ class SignUp(APIView):
         #Verify if the email is already verified, which means it is taken already.
         if check_email_verification_status(email): 
             return Response({'status': False, 'message': 'The email provided is already verified'}, status = status.HTTP_409_CONFLICT)
-        #Email is not verified but is stored in the database
+        #When email is not verified but is stored in the database
         elif check_email_verification_status(email) == False: 
             #Get the uid
             result, uid = get_uid_from_field('email', email, 'users')
@@ -208,7 +208,7 @@ class AddForum(APIView):
         """
         pass       
 
-class GetForums(APIView):
+class GetUserForumsIds(APIView):
     """
         Get forums followed by the user
     """
