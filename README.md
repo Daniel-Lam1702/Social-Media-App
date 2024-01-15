@@ -52,5 +52,5 @@ pip freeze > requirements.txt
   - ChangeForumName
   - DeleteForum
 - Posts
-  - CreatePost (Creating the subcollection Survey is not working yet)
-  - GetDraftsFromUser
+  - CreatePost
+  - GetPostsFromUser
