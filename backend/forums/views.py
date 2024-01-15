@@ -34,7 +34,7 @@ class CreateForum(APIView):
             'name': name,
             'is_public': is_public,
             'college': college,
-            'creator': uid
+            'creator': get_document_ref_with_id(uid, "users")
         }
 
         document_ref = add_document_to_collection(document, 'forums')
@@ -62,7 +62,7 @@ class ToggleForumPrivacy(APIView):
         creator = get_field_value("forums", forum_id, "creator")
         if creator == None:
             return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
-        if creator != uid:
+        if creator != get_document_ref_with_id(uid, "users"):
             return Response({'status': False, 'message': 'User is not allowed to delete the forum'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             is_public = request.data['is_public']
@@ -97,7 +97,7 @@ class ChangeForumName(APIView):
         creator = get_field_value("forums", forum_id, "creator")
         if creator == None:
             return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
-        if creator != uid:
+        if creator != get_document_ref_with_id(uid, "users"):
             return Response({'status': False, 'message': 'User is not allowed to delete the forum'}, status=status.HTTP_401_UNAUTHORIZED)
         #Retrieving the new forum name
         try:
@@ -131,9 +131,7 @@ class DeleteForum(APIView):
         creator = get_field_value("forums", forum_id, "creator")
         if creator == None:
             return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
-        print(creator)
-        print(uid)
-        if creator != uid:
+        if creator != get_document_ref_with_id(uid, "users"):
             return Response({'status': False, 'message': 'User is not allowed to delete the forum'}, status=status.HTTP_401_UNAUTHORIZED)
         if delete_document('forums', forum_id):
             return Response({'status': True, 'message': 'Forum deleted'}, status=status.HTTP_200_OK)

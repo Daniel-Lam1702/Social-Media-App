@@ -78,7 +78,7 @@ class SignUp(APIView):
             #Send another verification email
             link = auth.generate_email_verification_link(email)
             subject = 'Verify your email for DoorC App'
-            message = f'''<p>Hello {user},</p>
+            message = f'''<p>Hello {username},</p>
                 <p>Follow this link to verify your email address.</p>
                 <a href="{link}" style="text-decoration: none; cursor: pointer !important;">
                     <button style="padding: 10px 20px; font-size: 16px; color:white; background-color:#66399D; border: none; border-radius: 5px; cursor: pointer !important;">
@@ -183,6 +183,11 @@ class DeleteUser(APIView):
         valid_uid, uid = verifyToken(token)
         if not valid_uid:
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            auth.revoke_refresh_tokens(uid)  # Optional: Revoke existing refresh tokens
+        except:
+        # Re-authentication or deletion failed, handle the error
+            return Response({"success": False, "message": "Could not revoke the refresh tokens"}, status=status.HTTP_401_UNAUTHORIZED)
         #Delete from firestore
         if not delete_document('users', uid):
             return Response({'status': False, 'message': 'User could not be deleted in Firestore'}, status=status.HTTP_417_EXPECTATION_FAILED)

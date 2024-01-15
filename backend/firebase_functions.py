@@ -49,7 +49,7 @@ def get_document_path(field_name, value, collection_name):
     # Return None if the document was not found
     return None
 
-def get_document_path_id(value, collection_name):
+def get_document_ref_with_id(value, collection_name):
     """
     Parameters: field_name (The name of the field), value (The value of the field), collection_name (The name of the collection)
     This function returns the document path when it receives a field name, its value, and collection name by making a query to the database
@@ -57,15 +57,11 @@ def get_document_path_id(value, collection_name):
     """
     # Reference to the collection
     document_ref = settings.FIRESTORE_DB.collection(collection_name).document(value)
-    doc = document_ref.get()
-    if doc.exists:
-        return doc.reference.path
-    else:
-        return None
+    return document_ref
 
 def get_document_reference_id(value, collection_name):
     """
-    Parameters: field_name (The name of the field), value (The value of the field), collection_name (The name of the collection)
+    Parameters: value (The value of the field), collection_name (The name of the collection)
     This function returns the document path when it receives a field name, its value, and collection name by making a query to the database
     returns: None (no document found) or a reference.path (One document found)
     """
@@ -95,7 +91,6 @@ def add_subdocument_to_document(subdocument, name_subcollection, document):
         return subdocument_ref
     except:
         return None
-
 def is_value_unique(field, value, collection):
     try:
         # Build the query to find documents with the specified value
@@ -190,9 +185,9 @@ def query_composite_filter_list(name_field1, value1, name_field2, value2, collec
             ]
         )
         # Query the Firestore collection to check if any collection_name has the composite filter
-        user_query = settings.FIRESTORE_DB.collection(collection_name).where(filter=composite_filter)
-        existing_user = user_query.stream()
-        return existing_user
+        query = settings.FIRESTORE_DB.collection(collection_name).where(filter=composite_filter)
+        docs = query.stream()
+        return docs
     except Exception as e:
         # Handle Firestore query errors
         print(f"Error querying Firestore: {e}")

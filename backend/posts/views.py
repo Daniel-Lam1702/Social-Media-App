@@ -45,6 +45,8 @@ class CreatePost(APIView):
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
         data = request.data
         author = get_document_reference_id(uid, 'users')
+        if author == None:
+            return Response({'status': False, 'message': 'User does not exist.'}, status=status.HTTP_401_UNAUTHORIZED)
         # Getting the college of the user:
         college = get_field_value("users", uid, "college")
         # Getting the required fields to make a post
@@ -52,7 +54,7 @@ class CreatePost(APIView):
             forum_id = data['forum_id']
         except:
             return Response({'status': False, 'message': 'Provide a forum_id'}, status = status.HTTP_400_BAD_REQUEST)
-        if get_document_path_id( forum_id, "forums") == None:
+        if get_document_reference_id(forum_id, "forums") == None:
             return Response({'status': False, 'message': 'Cannot find the forum id in the database'}, status=status.HTTP_404_NOT_FOUND)
         try:
             title = data['title']
@@ -80,8 +82,8 @@ class CreatePost(APIView):
             is_posted = False
         document = {
             'title': title,
-            'author': author,
-            'forum_id': forum_id,
+            'author': get_document_ref_with_id(author, "users"),
+            'forum_id': get_document_ref_with_id(forum_id,"forums"),
             'description': description,
             'allow_comment': allow_comment,
             'anonymous_author': anonymous_author,
@@ -141,11 +143,10 @@ class CreatePost(APIView):
             options_ref = add_subdocument_to_document(options, 'options', survey_ref)
             if options_ref == None:
                 return Response({'status': False, 'message': 'options could not be added to the survey'}, status = status.HTTP_400_BAD_REQUEST)    
-        return Response({'status': True, 'message': 'post created successfully'}, status = status.HTTP_201_CREATED)
-class GetDraftsFromUser(APIView):
+        return Response({'status': True, 'message': 'post created successfully', 'post_id': document_ref.id}, status = status.HTTP_201_CREATED)
+class GetPostsFromUser(APIView):
     def get(self, request):
-        #For every draft return all the details
-                # We obtain the token
+        # We obtain the token
         authorization_header = request.headers.get('Authorization', '')
         token = authorization_header
         if not token:
@@ -154,37 +155,46 @@ class GetDraftsFromUser(APIView):
         valid_uid, uid = verifyToken(token)
         if not valid_uid:
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+        #Here the client decides whether we get the drafts or the posted posts
+        try:
+            is_posted = request.data["is_posted"]
+        except:
+            return Response({'status': False, 'message': 'Provide is_posted'}, status=status.HTTP_401_UNAUTHORIZED)
         #With the user uid I can make a composite filter (user == uid + is_posted == False) that would get me a list with all the posts that are drafts
-        """Then, I can make a dictionary: 
-            {
-                id1: {
-                    title: title,
-                    forum: forum,
-                    date: date
-                },
-                id2: {
-                    title: title,
-                    forum: forum,
-                    date: date
-                },
-            }
-        """
-        list_drafts =  query_composite_filter_list('author', uid, 'is_posted', False, 'posts')
-        if list_drafts == None:
-            return Response({'status': False, 'message': 'No drafts associated with the user'}, status=status.HTTP_401_UNAUTHORIZED)
-        drafts = {}
-        for draft in list_drafts:
-            drafts[draft.id] = {'title': draft.get('title'), 'forum': draft.get('forum'), 'date': draft.get('drafted_date')}
-        return Response({'status': True, 'drafts': drafts}, status=status.HTTP_302_FOUND)
+        list_posts =  query_composite_filter_list('author', get_document_ref_with_id(uid, "users"), 'is_posted', is_posted, 'posts')
+        if list_posts == None:
+            return Response({'status': False, 'message': 'No posts associated with the user'}, status=status.HTTP_200_OK)
+        posts = {}
+        #Iterating through each draft
+        for post in list_posts:
+            #Each draft gets converted into a dictionary
+            posts[post.id] = post.to_dict()
+            posts[post.id]['forum_id'] = posts[post.id]['forum_id'].id
+            posts[post.id]['author'] = posts[post.id]['author'].id
+            #Time to get the survey subcollection
+            survey = self.get_survey(post.reference)
+            if survey != {}:
+                posts[post.id]['survey'] = survey
+        return Response({'status': True, 'posts': posts}, status=status.HTTP_200_OK)
+    def get_survey(self, draft_ref):
+        survey_data = {}
+        survey_ref = draft_ref.collection('survey')
+        for survey in survey_ref.stream():
+            survey_data = survey.to_dict()
+            survey_data['id'] = survey.id
+            survey_data['options'] = self.get_options(survey.reference)
+        return survey_data
+
+    def get_options(self, survey_ref):
+        options_ref = survey_ref.collection('options')
+        for option in options_ref.stream():
+            options = option.to_dict()
+        return options
 class EditPost(APIView):
     def put(self, request):
         #Placeholder for the function edit_post
         pass
-    
 class GetPostsFromForum(APIView):
-    def get(self, request):
-        pass
-class GetPostsFromUser(APIView):
     def get(self, request):
         pass
 class ClickOnOption(APIView):
