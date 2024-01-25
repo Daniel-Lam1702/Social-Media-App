@@ -136,8 +136,8 @@ def update_field_in_document(collection_name, document_id, field_name, new_value
         # Reference to the document
         doc_ref = settings.FIRESTORE_DB.collection(collection_name).document(document_id)
         # Update the specific field in the document
-        doc_ref.update({field_name: new_value})
-        return True
+        doc_ref = doc_ref.update({field_name: new_value})
+        return doc_ref
     except:
         return False
     

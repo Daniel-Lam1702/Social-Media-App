@@ -184,7 +184,7 @@ class DeleteUser(APIView):
         if not valid_uid:
             return Response({'status': False, 'message': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
         try:
-            auth.revoke_refresh_tokens(uid)  # Optional: Revoke existing refresh tokens
+            auth.revoke_refresh_tokens(uid)  # Revoke existing refresh tokens
         except:
         # Re-authentication or deletion failed, handle the error
             return Response({"success": False, "message": "Could not revoke the refresh tokens"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -199,7 +199,10 @@ class DeleteUser(APIView):
         #Future: Send an email letting the user know that the account has been deleted
         return Response({'status': True, 'message': 'User successfully deleted'}, status=status.HTTP_200_OK)
 
-class AddForum(APIView):
+#class GetUserInformation(APIView):
+#class EditUserInformation(APIView):
+
+class FollowForum(APIView):
     """
         Adds a forum reference to the user's forums list
     """
@@ -213,7 +216,7 @@ class AddForum(APIView):
         """
         pass       
 
-class GetUserForumsIds(APIView):
+class GetForumsFollowedByUser(APIView):
     """
         Get forums followed by the user
     """

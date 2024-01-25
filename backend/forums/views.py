@@ -25,22 +25,33 @@ class CreateForum(APIView):
                 return Response({'status': False, 'message': f'The forum \'{name}\' already exists in the {college} community' }, status=status.HTTP_401_UNAUTHORIZED)
         except:
             return Response({'status': False, 'message': 'Provide a name for the forum'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            forum_type = data['type']
+        except:
+            return Response({'status': False, 'message': 'Provide a type'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            description = data['description']
+        except:
+            return Response({'status': False, 'message': 'Provide a description'}, status=status.HTTP_401_UNAUTHORIZED)
         # Verifying is_public field
         try:
             is_public = data['is_public']
         except:
             return Response({'status': False, 'message': 'Provide if the forum is public or private'}, status=status.HTTP_401_UNAUTHORIZED)
-        document = {
+        forum = {
             'name': name,
             'is_public': is_public,
             'college': college,
-            'creator': get_document_ref_with_id(uid, "users")
+            'creator': get_document_ref_with_id(uid, "users"),
+            'type': forum_type,
+            'description': description
         }
-
-        document_ref = add_document_to_collection(document, 'forums')
+        document_ref = add_document_to_collection(forum, 'forums')
         if document_ref == None:
             return Response({'status': False, 'message': 'Forum could not be added to the database'}, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'status': True, 'message': 'Forum created successfully', 'forum_id': document_ref[1].id}, status = status.HTTP_201_CREATED)
+        forum['creator'] = uid
+        forum['id'] = document_ref[1].id
+        return Response({'status': True, 'message': 'Forum created successfully', 'forum': forum}, status = status.HTTP_201_CREATED)
 class ToggleForumPrivacy(APIView):
     def patch(self, request):
         """
@@ -71,7 +82,10 @@ class ToggleForumPrivacy(APIView):
         updated_privacy = update_field_in_document('forums', forum_id, 'is_public', (not is_public))
         if not updated_privacy:
             return Response({'status': False, 'message': 'Privacy not updated'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'status': True, 'message': 'Privacy updated'}, status=status.HTTP_200_OK)
+        forum = updated_privacy[1].to_dict()
+        forum['creator'] = uid
+        forum['id'] = updated_privacy[1].id
+        return Response({'status': True, 'message': 'Privacy updated', 'forum': forum}, status=status.HTTP_200_OK)
 class ChangeForumName(APIView):
     def patch(self, request):
         """
@@ -110,7 +124,10 @@ class ChangeForumName(APIView):
         updated_name = update_field_in_document('forums', forum_id, 'name', new_forum_name)
         if not updated_name:
             return Response({'status': False, 'message': 'Forum name not modified'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response({'status': True, 'message': 'Forum name modifed'}, status=status.HTTP_200_OK)
+        forum = updated_name[1].to_dict()
+        forum['creator'] = uid
+        forum['id'] = updated_name[1].id
+        return Response({'status': True, 'message': 'Forum name modifed', 'forum': forum}, status=status.HTTP_200_OK)
 class DeleteForum(APIView):
     def delete(self, request):
         """
